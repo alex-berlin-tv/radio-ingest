@@ -22,6 +22,11 @@ func ConfigFromJSON(path string) (*Config, error) {
 	return &rsl, nil
 }
 
+// Returns a Config instance with default values.
+func ConfigFromDefaults() Config {
+	return Config{}
+}
+
 // Saves a Config instance in JSON file.
 func (c Config) ToJSON(path string) error {
 	dt, err := json.Marshal(c)
