@@ -1,7 +1,7 @@
 # radio-ingest daemon
 
 <p align="center">
-  <img src="misc/logo.svg" />
+  <img src="misc/logo.svg" width="200px" />
 </p>
 
 
