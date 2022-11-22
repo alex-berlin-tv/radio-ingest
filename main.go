@@ -1,8 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -53,5 +59,15 @@ func configCmd(ctx *cli.Context) error {
 }
 
 func runCmd(ctx *cli.Context) error {
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Post("/", func(w http.ResponseWriter, r *http.Request) {
+		dt, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(dt))
+	})
+	http.ListenAndServe(":80", router)
 	return nil
 }
