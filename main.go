@@ -10,6 +10,10 @@ import (
 )
 
 func main() {
+	traceFlag := cli.BoolFlag{
+		Name:  "trace",
+		Usage: "enable trace mode",
+	}
 	debugFlag := cli.BoolFlag{
 		Name:    "debug",
 		Aliases: []string{"d"},
@@ -57,6 +61,7 @@ func main() {
 				Usage:  "runs the daemon",
 				Action: runCmd,
 				Flags: []cli.Flag{
+					&traceFlag,
 					&debugFlag,
 					&cli.PathFlag{
 						Name:    "config",
@@ -106,7 +111,9 @@ func recordCmd(ctx *cli.Context) error {
 }
 
 func runCmd(ctx *cli.Context) error {
-	if ctx.Bool("debug") {
+	if ctx.Bool("trace") {
+		logrus.SetLevel(logrus.TraceLevel)
+	} else if ctx.Bool("debug") {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 	cfg, err := config.ConfigFromJSON(ctx.Path("config"))

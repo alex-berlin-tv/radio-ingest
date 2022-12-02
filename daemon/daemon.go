@@ -90,6 +90,7 @@ func (d Daemon) recordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d Daemon) onNotification(body []byte) error {
+	logrus.Trace(string(body))
 	data, err := notification.NotificationFromJson(body)
 	if err != nil {
 		return err
