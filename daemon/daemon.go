@@ -90,11 +90,21 @@ func (d Daemon) recordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d Daemon) onNotification(body []byte) error {
-	fmt.Println(string(body))
 	data, err := notification.NotificationFromJson(body)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%+v\n", data)
+	logrus.WithFields(debugFields(*data)).Debug("Got new notification")
 	return nil
+}
+
+func debugFields(dt notification.Notification) logrus.Fields {
+	return logrus.Fields{
+		"origin":      dt.Data.PublishingData.Origin,
+		"event":       dt.Trigger.Event,
+		"title":       dt.Data.General.Title,
+		"subtitle":    dt.Data.General.SubTitle,
+		"refnr":       dt.Data.General.RefNr,
+		"description": dt.Data.General.Description,
+	}
 }

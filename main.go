@@ -10,6 +10,11 @@ import (
 )
 
 func main() {
+	debugFlag := cli.BoolFlag{
+		Name:    "debug",
+		Aliases: []string{"d"},
+		Usage:   "enable debug mode",
+	}
 	app := &cli.App{
 		Name:  "radio-ingest",
 		Usage: "handles incoming radio uploads",
@@ -52,6 +57,7 @@ func main() {
 				Usage:  "runs the daemon",
 				Action: runCmd,
 				Flags: []cli.Flag{
+					&debugFlag,
 					&cli.PathFlag{
 						Name:    "config",
 						Aliases: []string{"c"},
@@ -64,6 +70,7 @@ func main() {
 				Usage:  "test run command with an existing notification",
 				Action: testRunCmd,
 				Flags: []cli.Flag{
+					&debugFlag,
 					&cli.PathFlag{
 						Name:    "config",
 						Aliases: []string{"c"},
@@ -99,6 +106,9 @@ func recordCmd(ctx *cli.Context) error {
 }
 
 func runCmd(ctx *cli.Context) error {
+	if ctx.Bool("debug") {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
 	if err != nil {
 		return err
@@ -109,6 +119,9 @@ func runCmd(ctx *cli.Context) error {
 }
 
 func testRunCmd(ctx *cli.Context) error {
+	if ctx.Bool("debug") {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
 	if err != nil {
 		return err
