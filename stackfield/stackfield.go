@@ -7,9 +7,13 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
+
+// Stackfield call response.
+type Response struct {
+	Result    string
+	ErrorText string
+}
 
 // A Stackfield room to which messages can be sent.
 type Room struct {
@@ -31,7 +35,6 @@ func (r Room) Send(msg string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(bodyBt))
 	bodyRd := bytes.NewReader(bodyBt)
 	req, err := http.NewRequest(http.MethodPost, r.URL, bodyRd)
 	if err != nil {
@@ -45,11 +48,16 @@ func (r Room) Send(msg string) error {
 	if err != nil {
 		return err
 	}
+
 	defer rsp.Body.Close()
-	body, err := io.ReadAll(rsp.Body)
+	rspBt, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		return err
 	}
-	logrus.Debugf("got stackfield response, %s", body)
+	var stkRsp Response
+	if err := json.Unmarshal(rspBt, &stkRsp); err != nil {
+		return fmt.Errorf("got error code %s while calling Stackfield, %s", stkRsp.Result, stkRsp.ErrorText)
+	}
+
 	return nil
 }
