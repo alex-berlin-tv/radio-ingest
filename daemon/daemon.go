@@ -95,7 +95,11 @@ func (d Daemon) onNotification(body []byte) error {
 	if err != nil {
 		return err
 	}
-	logrus.WithFields(debugFields(*data)).Debug("Got new notification")
+	logrus.WithFields(debugFields(*data)).Debug("New notification received")
+	if data.Data.PublishingData.Origin != "uploadlink" || data.Trigger.Event != "metadata" {
+		logrus.Debug("ignore notification")
+		return nil
+	}
 	return nil
 }
 
