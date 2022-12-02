@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -6,7 +6,12 @@ import (
 )
 
 // Configuration file for the application.
-type Config struct{}
+type Config struct {
+	DomainId  string `json:"domain_id"`
+	ApiSecret string `json:"api_secret"`
+	SessionId string `json:"session_id"`
+	Port      int    `json:"port"`
+}
 
 // Loads a Config from a given file path.
 func ConfigFromJSON(path string) (*Config, error) {

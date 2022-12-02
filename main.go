@@ -1,14 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/alex-berlin-tv/radio-ingest/config"
+	"github.com/alex-berlin-tv/radio-ingest/daemon"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -54,20 +50,16 @@ func main() {
 }
 
 func configCmd(ctx *cli.Context) error {
-	cfg := ConfigFromDefaults()
+	cfg := config.ConfigFromDefaults()
 	return cfg.ToJSON(ctx.Path("output"))
 }
 
 func runCmd(ctx *cli.Context) error {
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-	router.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		dt, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(dt))
-	})
-	http.ListenAndServe(":80", router)
+	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
+	if err != nil {
+		return err
+	}
+	dmn := daemon.NewDaemon(*cfg)
+	dmn.Run()
 	return nil
 }
