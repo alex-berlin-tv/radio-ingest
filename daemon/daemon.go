@@ -10,6 +10,7 @@ import (
 	"github.com/alex-berlin-tv/nexx_omnia_go/notification"
 	"github.com/alex-berlin-tv/nexx_omnia_go/omnia"
 	"github.com/alex-berlin-tv/radio-ingest/config"
+	"github.com/alex-berlin-tv/radio-ingest/stackfield"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sirupsen/logrus"
@@ -19,6 +20,7 @@ import (
 // uploads.
 type Daemon struct {
 	Omnia      omnia.Omnia
+	Stackfield stackfield.Room
 	Port       int
 	recordPath string
 }
@@ -26,8 +28,9 @@ type Daemon struct {
 // Returns a new [Daemon] instance based on the given configuration.
 func NewDaemon(cfg config.Config) Daemon {
 	return Daemon{
-		Omnia: omnia.NewOmnia(cfg.DomainId, cfg.ApiSecret, cfg.SessionId),
-		Port:  cfg.Port,
+		Omnia:      omnia.NewOmnia(cfg.DomainId, cfg.ApiSecret, cfg.SessionId),
+		Stackfield: stackfield.NewRoom(cfg.StackfieldURL),
+		Port:       cfg.Port,
 	}
 }
 
@@ -100,6 +103,7 @@ func (d Daemon) onNotification(body []byte) error {
 		logrus.Debug("ignore notification")
 		return nil
 	}
+	d.Stackfield.Send("hoi welt")
 	return nil
 }
 

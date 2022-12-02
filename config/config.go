@@ -7,10 +7,11 @@ import (
 
 // Configuration file for the application.
 type Config struct {
-	DomainId  string `json:"domain_id"`
-	ApiSecret string `json:"api_secret"`
-	SessionId string `json:"session_id"`
-	Port      int    `json:"port"`
+	DomainId      string `json:"domain_id"`
+	ApiSecret     string `json:"api_secret"`
+	SessionId     string `json:"session_id"`
+	Port          int    `json:"port"`
+	StackfieldURL string `json:"stackfield_url"`
 }
 
 // Loads a Config from a given file path.
