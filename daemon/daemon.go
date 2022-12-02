@@ -33,7 +33,8 @@ func NewDaemon(cfg config.Config) Daemon {
 }
 
 // Listen for notifications and writes them to a JSON file.
-func (d Daemon) Record(path string) {
+func (d *Daemon) Record(path string) {
+	d.recordPath = path
 	d.startRouter(d.recordHandler)
 }
 
@@ -58,7 +59,7 @@ func (d Daemon) startRouter(handler func(http.ResponseWriter, *http.Request)) {
 	rtr := chi.NewRouter()
 	rtr.Use(middleware.Logger)
 	rtr.Post("/", handler)
-	logrus.Infof("Will listen to Omnia on :%d", d.Port)
+	logrus.Infof("Will listen for Omnia on :%d", d.Port)
 	http.ListenAndServe(fmt.Sprintf(":%d", d.Port), rtr)
 }
 
