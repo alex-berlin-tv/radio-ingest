@@ -31,6 +31,23 @@ func main() {
 				},
 			},
 			{
+				Name:   "record",
+				Usage:  "saves notification bodies to a JSON for further testing",
+				Action: recordCmd,
+				Flags: []cli.Flag{
+					&cli.PathFlag{
+						Name:    "config",
+						Aliases: []string{"c"},
+						Usage:   "path to config file",
+					},
+					&cli.PathFlag{
+						Name:    "output",
+						Aliases: []string{"o"},
+						Usage:   "path to output file",
+					},
+				},
+			},
+			{
 				Name:   "run",
 				Usage:  "runs the daemon",
 				Action: runCmd,
@@ -39,6 +56,23 @@ func main() {
 						Name:    "config",
 						Aliases: []string{"c"},
 						Usage:   "path to config file",
+					},
+				},
+			},
+			{
+				Name:   "test-run",
+				Usage:  "test run command with an existing notification",
+				Action: testRunCmd,
+				Flags: []cli.Flag{
+					&cli.PathFlag{
+						Name:    "config",
+						Aliases: []string{"c"},
+						Usage:   "path to config file",
+					},
+					&cli.PathFlag{
+						Name:    "input",
+						Aliases: []string{"i"},
+						Usage:   "existing notification body from a JSON file",
 					},
 				},
 			},
@@ -54,6 +88,16 @@ func configCmd(ctx *cli.Context) error {
 	return cfg.ToJSON(ctx.Path("output"))
 }
 
+func recordCmd(ctx *cli.Context) error {
+	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
+	if err != nil {
+		return err
+	}
+	dmn := daemon.NewDaemon(*cfg)
+	dmn.Record(ctx.Path("output"))
+	return nil
+}
+
 func runCmd(ctx *cli.Context) error {
 	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
 	if err != nil {
@@ -61,5 +105,15 @@ func runCmd(ctx *cli.Context) error {
 	}
 	dmn := daemon.NewDaemon(*cfg)
 	dmn.Run()
+	return nil
+}
+
+func testRunCmd(ctx *cli.Context) error {
+	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
+	if err != nil {
+		return err
+	}
+	dmn := daemon.NewDaemon(*cfg)
+	dmn.TestRun(ctx.Path("input"))
 	return nil
 }
