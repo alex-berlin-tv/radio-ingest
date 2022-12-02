@@ -114,6 +114,5 @@ func testRunCmd(ctx *cli.Context) error {
 		return err
 	}
 	dmn := daemon.NewDaemon(*cfg)
-	dmn.TestRun(ctx.Path("input"))
-	return nil
+	return dmn.TestRun(ctx.Path("input"))
 }
