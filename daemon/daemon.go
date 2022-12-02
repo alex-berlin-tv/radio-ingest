@@ -32,6 +32,7 @@ func (d Daemon) Run() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Post("/", d.handleNotification)
+	logrus.Info("Will listen to Omnia on :%d", d.Port)
 	http.ListenAndServe(fmt.Sprintf(":%d", d.Port), router)
 }
 
@@ -44,5 +45,6 @@ func (d Daemon) handleNotification(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 	}
+	fmt.Println(string(dt))
 	fmt.Printf("%+v\n", data)
 }
