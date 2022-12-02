@@ -87,11 +87,11 @@ func (d Daemon) recordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d Daemon) onNotification(body []byte) error {
+	fmt.Println(string(body))
 	data, err := notification.NotificationFromJson(body)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(body))
 	fmt.Printf("%+v\n", data)
 	return nil
 }
