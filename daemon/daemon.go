@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
@@ -40,7 +39,7 @@ func (d *Daemon) Record(path string) {
 
 // Run the daemon.
 func (d Daemon) Run() {
-	d.startRouter(d.defaultNotificationHandler)
+	d.startRouter(d.defaultHandler)
 }
 
 // Test the notification handling with a pre-recorded notification body. Takes
@@ -63,24 +62,28 @@ func (d Daemon) startRouter(handler func(http.ResponseWriter, *http.Request)) {
 	http.ListenAndServe(fmt.Sprintf(":%d", d.Port), rtr)
 }
 
-func (d Daemon) defaultNotificationHandler(w http.ResponseWriter, r *http.Request) {
+func (d Daemon) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	dt, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Error(err)
+		return
 	}
 	if err := d.onNotification(dt); err != nil {
-		logrus.Fatal(err)
+		logrus.Error(err)
+		return
 	}
 }
 
 func (d Daemon) recordHandler(w http.ResponseWriter, r *http.Request) {
 	dt, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
+		return
 	}
 	var rec = make(Record)
 	if err := json.Unmarshal(dt, &rec); err != nil {
 		logrus.Error(err)
+		return
 	}
 	rec.SaveToJson(d.recordPath)
 	os.Exit(0)
