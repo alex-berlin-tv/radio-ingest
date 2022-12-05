@@ -43,6 +43,8 @@ const newRadioIngestMessage string = `*Neue Radiodatei hochgeladen*
 - {{.}}
 {{end -}}
 {{end -}}
+
+Waveform: {{.Waveform}}
 `
 
 /*
@@ -149,11 +151,13 @@ func (u RadioUpload) sendMessage(rsl taskResults) error {
 		OkResults:    rsl.okResults(),
 		ErrResults:   rsl.errResults(),
 		ManualTasks:  rsl.manualTasks(),
+		Waveform:     u.Notification.Data.ImageData.Waveform,
 	}
 	var msg bytes.Buffer
 	if err := tpl.Execute(&msg, dt); err != nil {
 		return err
 	}
+	fmt.Println(msg.String())
 	if err := u.Daemon.Stackfield.Send(msg.String()); err != nil {
 		return err
 	}
