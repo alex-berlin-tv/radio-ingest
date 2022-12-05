@@ -56,6 +56,9 @@ func (r Room) Send(msg string) error {
 	}
 	var stkRsp Response
 	if err := json.Unmarshal(rspBt, &stkRsp); err != nil {
+		return err
+	}
+	if stkRsp.Result != "ok" {
 		return fmt.Errorf("got error code %s while calling Stackfield, %s", stkRsp.Result, stkRsp.ErrorText)
 	}
 

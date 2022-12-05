@@ -16,6 +16,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Handles a incoming request.
+type Handler interface {
+	Name() string
+	Matches() bool
+	OnNotification() error
+}
+
 // Listens to the Omnia's notification gateway and handles incoming radio
 // uploads.
 type Daemon struct {
@@ -94,26 +101,33 @@ func (d Daemon) recordHandler(w http.ResponseWriter, r *http.Request) {
 
 func (d Daemon) onNotification(body []byte) error {
 	logrus.Trace(string(body))
-	data, err := notification.NotificationFromJson(body)
+	ntf, err := notification.NotificationFromJson(body)
 	if err != nil {
 		return err
 	}
-	logrus.WithFields(debugFields(*data)).Debug("New notification received")
-	if data.Data.PublishingData.Origin != "uploadlink" || data.Trigger.Event != "metadata" {
-		logrus.Debug("ignore notification")
-		return nil
+	logrus.WithFields(debugFields(*ntf)).Debug("New notification received")
+	handlers := []Handler{
+		NewRadioUpload(d, *ntf),
 	}
-	d.Stackfield.Send("hoi welt")
+	for _, handler := range handlers {
+		if handler.Matches() {
+			logrus.Debugf("notification matches %s handler", handler.Name())
+			err := handler.OnNotification()
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
-func debugFields(dt notification.Notification) logrus.Fields {
+func debugFields(ntf notification.Notification) logrus.Fields {
 	return logrus.Fields{
-		"origin":      dt.Data.PublishingData.Origin,
-		"event":       dt.Trigger.Event,
-		"title":       dt.Data.General.Title,
-		"subtitle":    dt.Data.General.SubTitle,
-		"refnr":       dt.Data.General.RefNr,
-		"description": dt.Data.General.Description,
+		"origin":      ntf.Data.PublishingData.Origin,
+		"event":       ntf.Trigger.Event,
+		"title":       ntf.Data.General.Title,
+		"subtitle":    ntf.Data.General.SubTitle,
+		"refnr":       ntf.Data.General.RefNr,
+		"description": ntf.Data.General.Description,
 	}
 }

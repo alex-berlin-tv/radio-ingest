@@ -26,6 +26,7 @@ func main() {
 			cli.ShowAppHelp(ctx)
 			return nil
 		},
+		Version: "0.1.10",
 		Commands: []*cli.Command{
 			{
 				Name:   "config",
@@ -75,6 +76,7 @@ func main() {
 				Usage:  "test run command with an existing notification",
 				Action: testRunCmd,
 				Flags: []cli.Flag{
+					&traceFlag,
 					&debugFlag,
 					&cli.PathFlag{
 						Name:    "config",
@@ -126,7 +128,9 @@ func runCmd(ctx *cli.Context) error {
 }
 
 func testRunCmd(ctx *cli.Context) error {
-	if ctx.Bool("debug") {
+	if ctx.Bool("trace") {
+		logrus.SetLevel(logrus.TraceLevel)
+	} else if ctx.Bool("debug") {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 	cfg, err := config.ConfigFromJSON(ctx.Path("config"))
