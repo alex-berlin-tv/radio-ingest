@@ -14,6 +14,7 @@ import (
 	"github.com/alex-berlin-tv/radio-ingest/stackfield"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/markusmobius/go-dateparser"
+	"go.etcd.io/bbolt"
 )
 
 const radioChannelId = "31543"
@@ -100,19 +101,30 @@ type taskResult struct {
 	ManualTasks []string
 }
 
+const radioUploadBucket = "RadioUpload"
+
 // Handles new radio uploads.
 type RadioUpload struct {
 	Omnia        omnia.Omnia
 	Stackfield   stackfield.Room
 	Notification notification.Notification
+	DB           *bbolt.DB
 }
 
-func NewRadioUpload(omnia omnia.Omnia, stackfield stackfield.Room, ntf notification.Notification) RadioUpload {
-	return RadioUpload{
+func NewRadioUpload(omnia omnia.Omnia, stackfield stackfield.Room, db *bbolt.DB, ntf notification.Notification) (*RadioUpload, error) {
+	err := db.Update(func(tx *bbolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(radioUploadBucket))
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &RadioUpload{
 		Omnia:        omnia,
 		Stackfield:   stackfield,
+		DB:           db,
 		Notification: ntf,
-	}
+	}, nil
 }
 
 func (u RadioUpload) Name() string {
@@ -123,14 +135,44 @@ func (u RadioUpload) Matches() bool {
 	if u.Notification.Data.PublishingData.Origin != "uploadlink" ||
 		u.Notification.Trigger.Event != "metadata" ||
 		u.Notification.Item.StreamType != "audio" ||
-		time.Since(time.Time(u.Notification.Trigger.Created)) > time.Hour*24 {
+		time.Since(time.Time(u.Notification.Data.General.Created)) > time.Hour*24 {
 		return false
 	}
-	return true
+	exists := false
+	u.DB.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(radioUploadBucket))
+		value := bucket.Get([]byte(u.Notification.Item.ID))
+		exists = len(value) > 0
+		return nil
+	})
+	u.DB.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(radioUploadBucket))
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			fmt.Printf("%s:%s\n", k, v)
+		}
+		return nil
+	})
+	return !exists
 }
 
 func (u RadioUpload) OnNotification() error {
-	fmt.Println(time.Since(time.Time(u.Notification.Trigger.Created)) > time.Hour*24)
+	err := u.DB.Update(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(radioUploadBucket))
+		err := bucket.Put([]byte(u.Notification.Item.ID), []byte("processing"))
+		return err
+	})
+	u.DB.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(radioUploadBucket))
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			fmt.Printf("%s:%s\n", k, v)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
 	var rsl taskResults
 	rsl = append(rsl, u.handleShow())
 	rsl = append(rsl, u.handleDate())

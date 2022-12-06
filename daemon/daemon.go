@@ -33,7 +33,7 @@ type Daemon struct {
 	Stackfield stackfield.Room
 	Port       int
 	recordPath string
-	DB         bbolt.DB
+	DB         *bbolt.DB
 }
 
 // Returns a new [Daemon] instance based on the given configuration.
@@ -46,7 +46,7 @@ func NewDaemon(cfg config.Config) (*Daemon, error) {
 		Omnia:      omnia.NewOmnia(cfg.DomainId, cfg.ApiSecret, cfg.SessionId),
 		Stackfield: stackfield.NewRoom(cfg.StackfieldURL),
 		Port:       cfg.Port,
-		DB:         *db,
+		DB:         db,
 	}, nil
 }
 
@@ -115,8 +115,12 @@ func (d Daemon) onNotification(body []byte) error {
 		return err
 	}
 	logrus.WithFields(debugFields(*ntf)).Debug("New notification received")
+	radioHandler, err := NewRadioUpload(d.Omnia, d.Stackfield, d.DB, *ntf)
+	if err != nil {
+		return err
+	}
 	handlers := []Handler{
-		NewRadioUpload(d.Omnia, d.Stackfield, *ntf),
+		*radioHandler,
 	}
 	handlersInvoked := false
 	for _, handler := range handlers {
