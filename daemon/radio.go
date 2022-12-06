@@ -11,6 +11,7 @@ import (
 	"github.com/alex-berlin-tv/nexx_omnia_go/omnia"
 	"github.com/alex-berlin-tv/nexx_omnia_go/omnia/enums"
 	"github.com/alex-berlin-tv/nexx_omnia_go/omnia/params"
+	"github.com/alex-berlin-tv/radio-ingest/stackfield"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/markusmobius/go-dateparser"
 )
@@ -101,13 +102,15 @@ type taskResult struct {
 
 // Handles new radio uploads.
 type RadioUpload struct {
-	Daemon       Daemon
+	Omnia        omnia.Omnia
+	Stackfield   stackfield.Room
 	Notification notification.Notification
 }
 
-func NewRadioUpload(d Daemon, ntf notification.Notification) RadioUpload {
+func NewRadioUpload(omnia omnia.Omnia, stackfield stackfield.Room, ntf notification.Notification) RadioUpload {
 	return RadioUpload{
-		Daemon:       d,
+		Omnia:        omnia,
+		Stackfield:   stackfield,
 		Notification: ntf,
 	}
 }
@@ -158,7 +161,7 @@ func (u RadioUpload) sendMessage(rsl taskResults) error {
 		return err
 	}
 	fmt.Println(msg.String())
-	if err := u.Daemon.Stackfield.Send(msg.String()); err != nil {
+	if err := u.Stackfield.Send(msg.String()); err != nil {
 		return err
 	}
 	return nil
@@ -177,7 +180,7 @@ func (u RadioUpload) handleShow() taskResult {
 			},
 		}
 	}
-	rsl, err := u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	rsl, err := u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"show": fmt.Sprint(show.General.Id),
 	})
 	if err != nil && *rsl.Metadata.ErrorHint != "novalidcontext" {
@@ -191,7 +194,7 @@ func (u RadioUpload) handleShow() taskResult {
 			},
 		}
 	}
-	_, err = u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err = u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"refnr": "",
 	})
 	if err != nil {
@@ -210,7 +213,7 @@ func (u RadioUpload) handleShow() taskResult {
 }
 
 func (u RadioUpload) showByName(name string) (*omnia.MediaResultItem, error) {
-	rsp, err := u.Daemon.Omnia.All(enums.ShowStreamType, params.Basic{})
+	rsp, err := u.Omnia.All(enums.ShowStreamType, params.Basic{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get list of shows, %s", err)
 	}
@@ -248,7 +251,7 @@ func (u RadioUpload) handleDate() taskResult {
 		}
 	}
 	date := rsl[0].Date.Time
-	_, err = u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err = u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"releasedate": fmt.Sprint(date.Unix()),
 	})
 	if err != nil {
@@ -261,7 +264,7 @@ func (u RadioUpload) handleDate() taskResult {
 			},
 		}
 	}
-	_, err = u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err = u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"description": "",
 	})
 	if err != nil {
@@ -279,7 +282,7 @@ func (u RadioUpload) handleDate() taskResult {
 }
 
 func (u RadioUpload) handleChannel() taskResult {
-	_, err := u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err := u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"channel": radioChannelId,
 	})
 	if err != nil {
@@ -298,7 +301,7 @@ func (u RadioUpload) handleChannel() taskResult {
 }
 
 func (u RadioUpload) handleSubtitleField() taskResult {
-	_, err := u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err := u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"alttitle": u.Notification.Data.General.SubTitle,
 	})
 	if err != nil {
@@ -311,7 +314,7 @@ func (u RadioUpload) handleSubtitleField() taskResult {
 			},
 		}
 	}
-	_, err = u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err = u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"subtitle": "",
 	})
 	if err != nil {
@@ -331,7 +334,7 @@ func (u RadioUpload) handleSubtitleField() taskResult {
 }
 
 func (u RadioUpload) handleDescriptionField() taskResult {
-	_, err := u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err := u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"altdescription": u.Notification.Data.General.Description,
 	})
 	if err != nil {
@@ -343,7 +346,7 @@ func (u RadioUpload) handleDescriptionField() taskResult {
 			},
 		}
 	}
-	_, err = u.Daemon.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
+	_, err = u.Omnia.Update(enums.AudioStreamType, u.Notification.Data.General.ID, params.Custom{
 		"description": "",
 	})
 	if err != nil {

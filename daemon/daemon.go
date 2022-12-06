@@ -107,7 +107,7 @@ func (d Daemon) onNotification(body []byte) error {
 	}
 	logrus.WithFields(debugFields(*ntf)).Debug("New notification received")
 	handlers := []Handler{
-		NewRadioUpload(d, *ntf),
+		NewRadioUpload(d.Omnia, d.Stackfield, *ntf),
 	}
 	for _, handler := range handlers {
 		if handler.Matches() {
