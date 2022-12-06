@@ -145,30 +145,13 @@ func (u RadioUpload) Matches() bool {
 		exists = len(value) > 0
 		return nil
 	})
-	u.DB.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(radioUploadBucket))
-		c := bucket.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			fmt.Printf("%s:%s\n", k, v)
-		}
-		return nil
-	})
 	return !exists
 }
 
 func (u RadioUpload) OnNotification() error {
 	err := u.DB.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(radioUploadBucket))
-		err := bucket.Put([]byte(u.Notification.Item.ID), []byte("processing"))
-		return err
-	})
-	u.DB.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(radioUploadBucket))
-		c := bucket.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			fmt.Printf("%s:%s\n", k, v)
-		}
-		return nil
+		return bucket.Put([]byte(u.Notification.Item.ID), []byte("processing"))
 	})
 	if err != nil {
 		return err
@@ -182,7 +165,10 @@ func (u RadioUpload) OnNotification() error {
 	if err := u.sendMessage(rsl); err != nil {
 		return err
 	}
-	return nil
+	return u.DB.Update(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(radioUploadBucket))
+		return bucket.Put([]byte(u.Notification.Item.ID), []byte("done"))
+	})
 }
 
 func (u RadioUpload) sendMessage(rsl taskResults) error {
