@@ -113,7 +113,7 @@ func (d Daemon) onNotification(body []byte) error {
 	if err != nil {
 		return err
 	}
-	logrus.WithFields(debugFields(*ntf)).Debug("New notification received")
+	logrus.WithFields(debugFields(*ntf)).Info("new notification received")
 	radioHandler, err := NewRadioUpload(d.Omnia, d.Stackfield, d.DB, *ntf)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (d Daemon) onNotification(body []byte) error {
 	for _, handler := range handlers {
 		if handler.Matches() {
 			handlersInvoked = true
-			logrus.Debugf("notification matches %s handler", handler.Name())
+			logrus.Infof("notification matches %s handler", handler.Name())
 			err := handler.OnNotification()
 			if err != nil {
 				return err
@@ -133,7 +133,7 @@ func (d Daemon) onNotification(body []byte) error {
 		}
 	}
 	if !handlersInvoked {
-		logrus.Debug("no matching handlers for notifications, ignored")
+		logrus.Info("no matching handlers for notifications, ignored")
 	}
 	return nil
 }
