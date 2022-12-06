@@ -9,6 +9,7 @@ require (
 	github.com/markusmobius/go-dateparser v0.0.0-20220211203457-60965b2d2bfb
 	github.com/sirupsen/logrus v1.9.0
 	github.com/urfave/cli/v2 v2.23.5
+	go.etcd.io/bbolt v1.3.6
 )
 
 require (

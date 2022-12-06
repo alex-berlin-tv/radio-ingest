@@ -120,12 +120,17 @@ func (u RadioUpload) Name() string {
 }
 
 func (u RadioUpload) Matches() bool {
-	return u.Notification.Data.PublishingData.Origin == "uploadlink" &&
-		u.Notification.Trigger.Event == "metadata" &&
-		u.Notification.Item.StreamType == "audio"
+	if u.Notification.Data.PublishingData.Origin != "uploadlink" ||
+		u.Notification.Trigger.Event != "metadata" ||
+		u.Notification.Item.StreamType != "audio" ||
+		time.Since(time.Time(u.Notification.Trigger.Created)) > time.Hour*24 {
+		return false
+	}
+	return true
 }
 
 func (u RadioUpload) OnNotification() error {
+	fmt.Println(time.Since(time.Time(u.Notification.Trigger.Created)) > time.Hour*24)
 	var rsl taskResults
 	rsl = append(rsl, u.handleShow())
 	rsl = append(rsl, u.handleDate())

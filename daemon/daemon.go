@@ -3,9 +3,11 @@ package daemon
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/alex-berlin-tv/nexx_omnia_go/notification"
 	"github.com/alex-berlin-tv/nexx_omnia_go/omnia"
@@ -14,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sirupsen/logrus"
+	"go.etcd.io/bbolt"
 )
 
 // Handles a incoming request.
@@ -30,15 +33,21 @@ type Daemon struct {
 	Stackfield stackfield.Room
 	Port       int
 	recordPath string
+	DB         bbolt.DB
 }
 
 // Returns a new [Daemon] instance based on the given configuration.
-func NewDaemon(cfg config.Config) Daemon {
-	return Daemon{
+func NewDaemon(cfg config.Config) (*Daemon, error) {
+	db, err := bbolt.Open(cfg.DBPath, 0600, &bbolt.Options{Timeout: 2 * time.Second})
+	if err != nil {
+		return nil, err
+	}
+	return &Daemon{
 		Omnia:      omnia.NewOmnia(cfg.DomainId, cfg.ApiSecret, cfg.SessionId),
 		Stackfield: stackfield.NewRoom(cfg.StackfieldURL),
 		Port:       cfg.Port,
-	}
+		DB:         *db,
+	}, nil
 }
 
 // Listen for notifications and writes them to a JSON file.
@@ -73,7 +82,7 @@ func (d Daemon) startRouter(handler func(http.ResponseWriter, *http.Request)) {
 }
 
 func (d Daemon) defaultHandler(w http.ResponseWriter, r *http.Request) {
-	dt, err := ioutil.ReadAll(r.Body)
+	dt, err := io.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -109,14 +118,19 @@ func (d Daemon) onNotification(body []byte) error {
 	handlers := []Handler{
 		NewRadioUpload(d.Omnia, d.Stackfield, *ntf),
 	}
+	handlersInvoked := false
 	for _, handler := range handlers {
 		if handler.Matches() {
+			handlersInvoked = true
 			logrus.Debugf("notification matches %s handler", handler.Name())
 			err := handler.OnNotification()
 			if err != nil {
 				return err
 			}
 		}
+	}
+	if !handlersInvoked {
+		logrus.Debug("no matching handlers for notifications, ignored")
 	}
 	return nil
 }

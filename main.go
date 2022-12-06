@@ -107,7 +107,10 @@ func recordCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	dmn := daemon.NewDaemon(*cfg)
+	dmn, err := daemon.NewDaemon(*cfg)
+	if err != nil {
+		return err
+	}
 	dmn.Record(ctx.Path("output"))
 	return nil
 }
@@ -122,7 +125,10 @@ func runCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	dmn := daemon.NewDaemon(*cfg)
+	dmn, err := daemon.NewDaemon(*cfg)
+	if err != nil {
+		return err
+	}
 	dmn.Run()
 	return nil
 }
@@ -137,6 +143,9 @@ func testRunCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	dmn := daemon.NewDaemon(*cfg)
+	dmn, err := daemon.NewDaemon(*cfg)
+	if err != nil {
+		return err
+	}
 	return dmn.TestRun(ctx.Path("input"))
 }

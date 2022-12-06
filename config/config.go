@@ -12,6 +12,7 @@ type Config struct {
 	SessionId     string `json:"session_id"`
 	Port          int    `json:"port"`
 	StackfieldURL string `json:"stackfield_url"`
+	DBPath        string `json:"db"`
 }
 
 // Loads a Config from a given file path.
