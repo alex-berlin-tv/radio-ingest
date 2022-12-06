@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -94,7 +93,7 @@ func (d Daemon) defaultHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d Daemon) recordHandler(w http.ResponseWriter, r *http.Request) {
-	dt, err := ioutil.ReadAll(r.Body)
+	dt, err := io.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error(err)
 		return

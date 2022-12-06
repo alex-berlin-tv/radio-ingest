@@ -193,7 +193,6 @@ func (u RadioUpload) sendMessage(rsl taskResults) error {
 	if err := tpl.Execute(&msg, dt); err != nil {
 		return err
 	}
-	fmt.Println(msg.String())
 	if err := u.Stackfield.Send(msg.String()); err != nil {
 		return err
 	}
