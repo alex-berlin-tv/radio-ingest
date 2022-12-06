@@ -3,7 +3,7 @@ module github.com/alex-berlin-tv/radio-ingest
 go 1.19
 
 require (
-	github.com/alex-berlin-tv/nexx_omnia_go v0.1.13
+	github.com/alex-berlin-tv/nexx_omnia_go v0.1.14
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/lithammer/fuzzysearch v1.1.5
 	github.com/markusmobius/go-dateparser v0.0.0-20220211203457-60965b2d2bfb
